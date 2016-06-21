@@ -4,7 +4,7 @@
 ;
 ;        разработчик: Лаврененко А.Л.
 ;        дата создания: 19.05.2010
-;        дата последнего изменения: 19.05.2010
+;        дата последнего изменения: 21.06.2016
 ;
 ;
 ;
@@ -17,7 +17,10 @@ $exe2 = IniRead("Закінчення дня_фіз.ini", "exe", "abonent", "NotFound")         
 $base = IniRead("Закінчення дня_фіз.ini", "base", "base", "NotFound")           		; полный путь к базе
 $pack = IniRead("Закінчення дня_фіз.ini", "pack", "pack", "NotFound")          			; полный путь к папке с архивами
 $user = "Лаврененко А.Л."                                                       		; пользователь
-$password = ""    				                                                  		; пароль
+$password = ""
+																					    ; пароль
+$date = @YEAR & "_" & @MON & "_" & @MDAY
+$delay = 600																			; задержка ожидание активации окна (5 минут)
 
 if $sessions = 1 Then
 ; уничтожение всех существующих процессов абонентскй и админинстратора
@@ -27,7 +30,9 @@ EndIf
 
 ; полный контроль в администраторе
 run($exe1 & " /D" & $base & "/N" & $user & "/P" & $password)
-WinWaitActive('Абоненти')
+If WinWaitActive('Абоненти',"", $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 sleep(10000)
 send('{ALT}')
 send('{DOWN}')
@@ -38,19 +43,25 @@ send('{DOWN}')
 send('{DOWN}')
 send('{ENTER}')
 send('{ENTER}')
-WinWaitActive('Абонент','РЕЖИМ: Створення таблиці, якщо не існує')
+If WinWaitActive('Абонент','РЕЖИМ: Створення таблиці, якщо не існує',"", $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 send('!x')
 sleep(5000)
 ; перерасчет базы данных
 run($exe2 & " /D" & $base & "/N" & $user & "/P" & $password)
-WinWaitActive('Абоненти')
+If WinWaitActive('Абоненти',"", $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 send('{ALT}')
 send('{DOWN}')
 send('{RIGHT}')
 send('{DOWN}')
 send('{ENTER}')
 send('{ENTER}')
-WinWaitActive("Виконання формули розрахунку (ОСНОВНА)",'OK')
+If WinWaitActive("Виконання формули розрахунку (ОСНОВНА)",'OK', $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 send('{ENTER}')
 send('{ALT}')
 send('{RIGHT}')
@@ -65,11 +76,20 @@ send('{DOWN}')
 send('{DOWN}')
 send('{DOWN}')
 send('{ENTER}')
-$date = @YEAR & "_" & @MON & "_" & @MDAY
-WinWaitActive('Збереження даних')
+If WinWaitActive('Збереження даних',"", $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 ; создание архива
 send($pack & $date)
 send('{ENTER}')
 Sleep(5000)
-WinWaitActive('Абоненти')
+If WinWaitActive('Абоненти', "", $delay) = 0 Then
+   ScreenShotExit($pack, $date)
+EndIf
 send('!x')
+
+Func ScreenShotExit($pack, $date)
+   _ScreenCapture_Capture("" & $pack & "Error_" & $date & ".jpg")
+   Exit
+EndFunc
+
